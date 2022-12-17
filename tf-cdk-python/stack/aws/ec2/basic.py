@@ -5,21 +5,36 @@ from imports.aws.provider import AwsProvider
 from imports.aws.data_aws_caller_identity import DataAwsCallerIdentity
 from imports.ec2_instance import Ec2Instance
 
+# equivalent to TF variables
+environmentName = "dev"
+ec2InstanceType = "t2.micro"
+ec2Ami = "ami-0a261c0e5f51090b1"
+
 
 class BasicEc2Stack(TerraformStack):
     def __init__(self, scope: Construct, ns: str):
         super().__init__(scope, ns)
 
+        # equivalent to TF provider
         AwsProvider(self, 'Aws', region='eu-central-1')
 
-        Ec2Instance(
+        # equivalent to TF local values
+        ec2Id = f'{environmentName}-ec2-id'
+
+        # equivalent to TF resources
+        ec2Instance = Ec2Instance(
             self,
-            "ec2-demo",
-            instance_type="t2.micro",
-            ami="ami-0a261c0e5f51090b1"
+            ec2Id,
+            instance_type=ec2InstanceType,
+            ami=ec2Ami,
+            tags={
+                "env": environmentName
+            }
         )
 
+        # equivalent to TF output values
         TerraformOutput(
-            self, 'create_user_arn',
-            value=DataAwsCallerIdentity(self, 'current').arn
+            self,
+            'ec2_public_ip',
+            value=ec2Instance.public_ip_output
         )
