@@ -1,9 +1,12 @@
 from constructs import Construct
-from cdktf import TerraformStack, TerraformOutput
+from cdktf import TerraformStack, S3Backend, TerraformOutput
 
 from imports.aws.provider import AwsProvider
 from imports.aws.data_aws_caller_identity import DataAwsCallerIdentity
 from imports.ec2_instance import Ec2Instance
+
+region = "eu-central-1"
+profile= "default"
 
 # equivalent to TF variables
 environmentName = "dev"
@@ -16,7 +19,18 @@ class BasicEc2Stack(TerraformStack):
         super().__init__(scope, ns)
 
         # equivalent to TF provider
-        AwsProvider(self, 'Aws', region='eu-central-1')
+        AwsProvider(self, 'Aws', region=region)
+
+        # equivalent to S3 remote backend
+        S3Backend(
+            self,
+            bucket="tf-cdk-python",
+            key="basic-ec2-stack/terraform.tfstate",
+            encrypt=False,
+            region=region,
+            dynamodb_table="tf-cdk-python",
+            profile=profile,
+        )
 
         # equivalent to TF local values
         ec2Id = f'{environmentName}-ec2-id'
