@@ -6,6 +6,7 @@ from imports.aws.data_aws_caller_identity import DataAwsCallerIdentity
 from imports.ec2_instance import Ec2Instance
 from imports.s3_bucket import S3Bucket
 from imports.dynamodb_table import DynamodbTable
+from imports.aws.data_aws_ami import DataAwsAmi
 
 region = "eu-central-1"  # the AWS region
 profile = "default"  # the AWS CLI profile to use
@@ -61,6 +62,29 @@ class BasicEc2Stack(TerraformStack):
         #     hash_key="LockID",
         # )
 
+        # equivalent to TF data sources (gets latest AMI ID for Amazon Linux2 OS)
+        ami = DataAwsAmi(
+            self,
+            "data-aws-ami",
+            most_recent=True,
+            owners=["amazon"],
+            filter=[
+                {
+                    "name": "name",
+                    "values": ["amzn2-ami-hvm-*"]
+                }, {
+                    "name": "root-device-type",
+                    "values": ["ebs"]
+                }, {
+                    "name": "virtualization-type",
+                    "values": ["hvm"]
+                }, {
+                    "name": "architecture",
+                    "values": ["x86_64"]
+                }
+            ]
+        )
+
         ec2Instance = Ec2Instance(
             self,
             ec2Id,
@@ -72,6 +96,12 @@ class BasicEc2Stack(TerraformStack):
         )
 
         # equivalent to TF output values
+        TerraformOutput(
+            self,
+            'ami',
+            value=ami.id
+        )
+
         TerraformOutput(
             self,
             'ec2_public_ip',
