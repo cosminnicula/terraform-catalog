@@ -24,7 +24,7 @@ class BasicEc2Stack(TerraformStack):
         # equivalent to TF provider
         AwsProvider(
             self,
-            'Aws',
+            "Aws",
             region=region
         )
 
@@ -91,12 +91,18 @@ class BasicEc2Stack(TerraformStack):
             ec2Id,
             instance_type=ec2InstanceType,
             ami=ec2Ami,
+            key_name="cn-ec2-1",
+            monitoring=True,
+            vpc_security_group_ids=["sg-020054ce43d5db33c"],
+            subnet_id="subnet-2af24542",
+            user_data="setup_apache.sh",
             tags={
                 "env": environmentName
             }
         )
 
         # # equivalent to TF EC2 module's instance_count property
+        # see also TerraformHclModule (https://developer.hashicorp.com/terraform/cdktf/concepts/modules)
         # for i in range(2):
         #     # equivalent to TF modules
         #     ec2Instance = Ec2Instance(
@@ -112,12 +118,12 @@ class BasicEc2Stack(TerraformStack):
         # equivalent to TF output values
         TerraformOutput(
             self,
-            'ami',
+            "ami",
             value=ami.id
         )
 
         TerraformOutput(
             self,
-            'ec2_public_ip',
+            "ec2_public_ip",
             value=ec2Instance.public_ip_output
         )
