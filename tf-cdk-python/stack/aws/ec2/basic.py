@@ -42,7 +42,7 @@ class BasicEc2Stack(TerraformStack):
         # equivalent to TF local values
         ec2Id = f'{environmentName}-ec2-id'
 
-        # equivalent to TF resources
+        # equivalent to TF resources / modules
         # the following S3 bucket and DynamoDB table needs to be provisioned before activating the S3 backend
         # next, run terraform init --migrate-state inside cdktf.out/stacks/basic-ec2-stack
         # S3Bucket(
@@ -85,6 +85,7 @@ class BasicEc2Stack(TerraformStack):
             ]
         )
 
+        # equivalent to TF EC2 module
         ec2Instance = Ec2Instance(
             self,
             ec2Id,
@@ -94,6 +95,19 @@ class BasicEc2Stack(TerraformStack):
                 "env": environmentName
             }
         )
+
+        # # equivalent to TF EC2 module's instance_count property
+        # for i in range(2):
+        #     # equivalent to TF modules
+        #     ec2Instance = Ec2Instance(
+        #         self,
+        #         f'{ec2Id}-{i}',
+        #         instance_type=ec2InstanceType,
+        #         ami=ec2Ami,
+        #         tags={
+        #             "env": environmentName
+        #         }
+        #     )
 
         # equivalent to TF output values
         TerraformOutput(
