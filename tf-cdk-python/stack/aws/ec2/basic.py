@@ -1,5 +1,5 @@
 from constructs import Construct
-from cdktf import TerraformStack, S3Backend, TerraformOutput
+from cdktf import TerraformStack, S3Backend, TerraformOutput, TerraformAsset, AssetType
 
 from imports.aws.provider import AwsProvider
 from imports.aws.data_aws_caller_identity import DataAwsCallerIdentity
@@ -7,9 +7,14 @@ from imports.ec2_instance import Ec2Instance
 from imports.s3_bucket import S3Bucket
 from imports.dynamodb_table import DynamodbTable
 from imports.aws.data_aws_ami import DataAwsAmi
+from imports.random.provider import RandomProvider
+from imports.random.string_resource import StringResource
+
+import os
 
 region = "eu-central-1"  # the AWS region
-profile = "default"  # the AWS CLI profile to use
+# the AWS CLI profile to use; if not explicitly specified, "default" is used
+profile = "default"
 
 # equivalent to TF variables
 environmentName = "dev"
@@ -24,8 +29,13 @@ class BasicEc2Stack(TerraformStack):
         # equivalent to TF provider
         AwsProvider(
             self,
-            "Aws",
+            "aws",
             region=region
+        )
+
+        RandomProvider(
+            self,
+            "random"
         )
 
         # equivalent to S3 remote backend
@@ -85,6 +95,13 @@ class BasicEc2Stack(TerraformStack):
             ]
         )
 
+        setupApacheScript = TerraformAsset(
+            self,
+            "setup-apache-script",
+            path=os.path.join(os.path.dirname(__file__), 'setup_apache.sh'),
+            type=AssetType.FILE
+        )
+
         # equivalent to TF EC2 module
         ec2Instance = Ec2Instance(
             self,
@@ -95,13 +112,13 @@ class BasicEc2Stack(TerraformStack):
             monitoring=True,
             vpc_security_group_ids=["sg-020054ce43d5db33c"],
             subnet_id="subnet-2af24542",
-            user_data="setup_apache.sh",
+            user_data=setupApacheScript.path,
             tags={
                 "env": environmentName
             }
         )
 
-        # # equivalent to TF EC2 module's instance_count property
+        # # equivalent to TF EC2 module's instance_count meta-argument
         # see also TerraformHclModule (https://developer.hashicorp.com/terraform/cdktf/concepts/modules)
         # for i in range(2):
         #     # equivalent to TF modules
@@ -115,6 +132,12 @@ class BasicEc2Stack(TerraformStack):
         #         }
         #     )
 
+        randomString = StringResource(
+            self,
+            "random-string",
+            length=8
+        )
+
         # equivalent to TF output values
         TerraformOutput(
             self,
@@ -126,4 +149,10 @@ class BasicEc2Stack(TerraformStack):
             self,
             "ec2_public_ip",
             value=ec2Instance.public_ip_output
+        )
+
+        TerraformOutput(
+            self,
+            "some_random_string",
+            value=randomString
         )
